@@ -28,7 +28,32 @@ app.post('/vegeta', (req, res) => {
         return res.status(400).send(stderr.replace(/(\r\n|\n|\r)/gm, "<br>"));
     }
 
-    return res.send(stdout);
+    stdout = JSON.parse(stdout);
+
+    let latenciesInSeconds = {}
+    let resultInSeconds = stdout.duration;
+    let waitInSeconds = stdout.wait;
+
+    for (const key in stdout.latencies) {
+      const value = stdout.latencies[key];
+      let time = value/1000000000;  
+      latenciesInSeconds[key] = time < 1 ? time = (value/1000000).toFixed(4) + "ms" : time.toFixed(4) + "s";
+    }
+
+    let time = resultInSeconds/1000000000;  
+    resultInSeconds = time < 1 ? time = (resultInSeconds/1000000).toFixed(4) + "ms" : time.toFixed(4) + "s";
+    
+    time = waitInSeconds/1000000000;  
+    waitInSeconds = time < 1 ? time = (waitInSeconds/1000000).toFixed(4) + "ms" : time.toFixed(4) + "s";
+
+    const resultsInSeconds = {
+      ...stdout,
+      latencies: latenciesInSeconds,
+      duration: resultInSeconds,
+      wait: waitInSeconds
+    }
+
+    return res.json(resultsInSeconds);
 
   });
 });
